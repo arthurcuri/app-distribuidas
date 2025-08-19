@@ -194,6 +194,7 @@ module.exports = {
 ---
 
 ## **PASSO 3: Implementação dos Modelos**
+npm run dev
 
 ### 3.1 Modelo de Usuário (`models/User.js`)
 
@@ -211,7 +212,8 @@ class User {
         this.firstName = data.firstName;
         this.lastName = data.lastName;
         this.createdAt = data.createdAt;
-    }
+    }npm run dev
+
 
     async hashPassword() {
         this.password = await bcrypt.hash(this.password, 12);
@@ -299,7 +301,8 @@ const authMiddleware = (req, res, next) => {
             message: 'Token inválido' 
         });
     }
-};
+};npm run dev
+
 
 module.exports = { authMiddleware };
 ```
@@ -406,7 +409,8 @@ router.post('/register', validate('register'), async (req, res) => {
 // Login
 router.post('/login', validate('login'), async (req, res) => {
     try {
-        const { identifier, password } = req.body;
+        const { identifier, password } = req.body;npm run dev
+
 
         const userData = await database.get(
             'SELECT * FROM users WHERE email = ? OR username = ?',
@@ -798,7 +802,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 # 3. Criar tarefa (usar token do login)
 curl -X POST http://localhost:3000/api/tasks \
-  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAxMjdjYjgwLWU1NGQtNGI1Mi04MWU2LTUyZGYxYzZkOTkxZCIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTU1NjM2NjEsImV4cCI6MTc1NTY1MDA2MX0.Du_xnCO2ikMHM64mr1sVlq7EFlSCNCgPVmtjyh9D7Pg" \
   -H "Content-Type: application/json" \
   -d '{"title":"Minha Tarefa","description":"Descrição","priority":"high"}'
 
