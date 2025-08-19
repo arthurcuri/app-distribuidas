@@ -70,9 +70,9 @@
   - RPS: **1,498**
   - **Rate Limiting funcionando corretamente**
 
-### Teste 6: BOMBARDEIO EXTREMO
+### Teste 6: Bombardeio Extremo
 - **Configuração**: 500 requisições concorrentes, 2000 total, timeout 0.5s
-- **Resultado**: **SUCESSO EM FORÇAR PERDA DE PACOTES**
+- **Resultado**: **PERDA DE PACOTES**
   - Taxa de sucesso: **16.2%** (323 sucessos)
   - Rate Limited: **149 bloqueios**
   - **Taxa de perda de pacotes: 69.5%** (1389 timeouts)
