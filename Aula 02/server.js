@@ -8,6 +8,8 @@ const config = require('./config/database');
 const database = require('./database/database');
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
+const userRoutes = require('./routes/users');
+
 
 /**
  * Servidor de Aplicação Tradicional
@@ -43,7 +45,8 @@ app.get('/', (req, res) => {
         architecture: 'Traditional Client-Server',
         endpoints: {
             auth: ['POST /api/auth/register', 'POST /api/auth/login'],
-            tasks: ['GET /api/tasks', 'POST /api/tasks', 'PUT /api/tasks/:id', 'DELETE /api/tasks/:id']
+            tasks: ['GET /api/tasks', 'POST /api/tasks', 'PUT /api/tasks/:id', 'DELETE /api/tasks/:id'],
+            users: ['GET /api/users', 'GET /api/users/:id', 'PUT /api/users/:id', 'DELETE /api/users/:id']
         }
     });
 });
@@ -60,6 +63,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

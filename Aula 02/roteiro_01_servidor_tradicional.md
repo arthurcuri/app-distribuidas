@@ -802,13 +802,13 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 # 3. Criar tarefa (usar token do login)
 curl -X POST http://localhost:3000/api/tasks \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAxMjdjYjgwLWU1NGQtNGI1Mi04MWU2LTUyZGYxYzZkOTkxZCIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTU1NjM2NjEsImV4cCI6MTc1NTY1MDA2MX0.Du_xnCO2ikMHM64mr1sVlq7EFlSCNCgPVmtjyh9D7Pg" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAxMjdjYjgwLWU1NGQtNGI1Mi04MWU2LTUyZGYxYzZkOTkxZCIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTU1NjM3NjksImV4cCI6MTc1NTY1MDE2OX0.D5RcXog8kNAvcyuaTppSY5zxO_KBUI1CyFYEY430q4A" \
   -H "Content-Type: application/json" \
   -d '{"title":"Minha Tarefa","description":"Descrição","priority":"high"}'
 
 # 4. Listar tarefas
 curl -X GET http://localhost:3000/api/tasks \
-  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAxMjdjYjgwLWU1NGQtNGI1Mi04MWU2LTUyZGYxYzZkOTkxZCIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTU1NjM3NjksImV4cCI6MTc1NTY1MDE2OX0.D5RcXog8kNAvcyuaTppSY5zxO_KBUI1CyFYEY430q4A"
 ```
 
 ---
