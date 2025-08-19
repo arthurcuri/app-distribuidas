@@ -34,13 +34,17 @@ class Database {
                 priority TEXT DEFAULT 'medium',
                 userId TEXT NOT NULL,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                dueDate DATETIME,
+                category TEXT DEFAULT 'general',
+                tags TEXT,
                 FOREIGN KEY (userId) REFERENCES users (id)
             )`;
 
-        return Promise.all([
-            this.run(userTable),
-            this.run(taskTable)
-        ]);
+        await this.run(userTable);
+        await this.run(taskTable);
+        
+        return Promise.resolve();
     }
 
     // Métodos auxiliares para promisificar SQLite

@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
 const database = require('../database/database');
 const { validate } = require('../middleware/validation');
+const logger = require('../middleware/logger');
 
 const router = express.Router();
 
@@ -10,6 +11,13 @@ const router = express.Router();
 router.post('/register', validate('register'), async (req, res) => {
     try {
         const { email, username, password, firstName, lastName } = req.body;
+        
+        logger.info('User registration attempt', {
+            requestId: req.requestId,
+            email,
+            username,
+            ip: req.ip
+        });
 
         // Verificar se usuário já existe
         const existingUser = await database.get(
@@ -18,6 +26,13 @@ router.post('/register', validate('register'), async (req, res) => {
         );
 
         if (existingUser) {
+            logger.securityLog('Registration failed - user exists', {
+                requestId: req.requestId,
+                email,
+                username,
+                ip: req.ip
+            });
+            
             return res.status(409).json({
                 success: false,
                 message: 'Email ou username já existe'
@@ -35,6 +50,13 @@ router.post('/register', validate('register'), async (req, res) => {
         );
 
         const token = user.generateToken();
+        
+        logger.info('User registered successfully', {
+            requestId: req.requestId,
+            userId: user.id,
+            email,
+            username
+        });
 
         res.status(201).json({
             success: true,
@@ -42,6 +64,11 @@ router.post('/register', validate('register'), async (req, res) => {
             data: { user: user.toJSON(), token }
         });
     } catch (error) {
+        logger.error('Registration error', {
+            requestId: req.requestId,
+            error: error.message,
+            stack: error.stack
+        });
         res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
 });
@@ -50,6 +77,12 @@ router.post('/register', validate('register'), async (req, res) => {
 router.post('/login', validate('login'), async (req, res) => {
     try {
         const { identifier, password } = req.body;
+        
+        logger.info('Login attempt', {
+            requestId: req.requestId,
+            identifier,
+            ip: req.ip
+        });
 
         const userData = await database.get(
             'SELECT * FROM users WHERE email = ? OR username = ?',
@@ -57,6 +90,12 @@ router.post('/login', validate('login'), async (req, res) => {
         );
 
         if (!userData) {
+            logger.securityLog('Login failed - user not found', {
+                requestId: req.requestId,
+                identifier,
+                ip: req.ip
+            });
+            
             return res.status(401).json({
                 success: false,
                 message: 'Credenciais inválidas'
@@ -67,6 +106,13 @@ router.post('/login', validate('login'), async (req, res) => {
         const isValidPassword = await user.comparePassword(password);
 
         if (!isValidPassword) {
+            logger.securityLog('Login failed - invalid password', {
+                requestId: req.requestId,
+                identifier,
+                userId: user.id,
+                ip: req.ip
+            });
+            
             return res.status(401).json({
                 success: false,
                 message: 'Credenciais inválidas'
@@ -74,6 +120,12 @@ router.post('/login', validate('login'), async (req, res) => {
         }
 
         const token = user.generateToken();
+        
+        logger.info('Login successful', {
+            requestId: req.requestId,
+            userId: user.id,
+            username: user.username
+        });
 
         res.json({
             success: true,
@@ -81,6 +133,11 @@ router.post('/login', validate('login'), async (req, res) => {
             data: { user: user.toJSON(), token }
         });
     } catch (error) {
+        logger.error('Login error', {
+            requestId: req.requestId,
+            error: error.message,
+            stack: error.stack
+        });
         res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
 });
