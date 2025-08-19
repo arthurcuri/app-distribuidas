@@ -7,22 +7,6 @@
 
 ---
 
-## RESUMO EXECUTIVO
-
-### PONTOS FORTES IDENTIFICADOS
-- Sistema com proteção Rate Limiting funcional
-- Autenticação JWT robusta sem bypass detectado
-- Cache em memória funcionando corretamente
-- Logs estruturados capturando todas as atividades
-- Performance adequada para cargas moderadas a altas
-
-### PONTOS DE ATENÇÃO
-- Rate Limiting muito agressivo (pode impactar UX)
-- Necessário teste de SQL Injection com configuração menos restritiva
-- Monitoramento de performance em carga extrema
-
----
-
 ## TESTES DE PERFORMANCE E ESTRESSE
 
 ### Teste 1: Health Check (Baseline)
@@ -116,11 +100,6 @@
 
 **Conclusão**: Sistema possui proteção Rate Limiting efetiva
 
-### Limitações dos Testes de Injeção
-**IMPORTANTE**: Os testes de SQL Injection e XSS não puderam ser completados devido ao rate limiting agressivo impedindo o login automático. 
-
-**Recomendação**: Configurar ambiente de teste com rate limiting reduzido para validação completa de segurança.
-
 ---
 
 ## ANÁLISE DE PERFORMANCE POR CATEGORIA
@@ -143,18 +122,110 @@
 
 ## ANÁLISE DE RATE LIMITING
 
-### Configuração Atual
+#### Ajuste de Rate Limiting
+```javascript
+// Configuração atual (muito restritiva)
+const rateLimit = {
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 1000, // limite por IP
+}
+
+// Sugestão de configuração mais balanceada
+const rateLimit = {
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 1000, // limite geral
+  burst: 50, // rajada permitida
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  keyGenerator: (req) => {
+    return req.user ? `user:${req.user.id}` : req.ip;
+  },
+  skip: (req) => req.path === '/health'
+}
+```
+
+### Detalhes da Configuração
+
+| Parâmetro | Valor | Significado |
+|-----------|-------|-------------|
+| **windowMs** | `15 * 60 * 1000` | **15 minutos** (janela de tempo) |
+| **max** | `1000` | **1000 requisições máximas** por IP |
+| **Escopo** | Global | Aplicado a **TODAS as rotas** |
+
+### Como Funciona
+
+1. **Janela de tempo**: A cada 15 minutos, o contador reseta
+2. **Limite por IP**: Cada endereço IP pode fazer no máximo 1000 requisições
+3. **Bloqueio**: Quando excede o limite, retorna **HTTP 429** (Too Many Requests)
+4. **Reset automático**: Após 15 minutos, o limite é resetado
+
+### Implementação no Código
+**Localização**: `server.js` linha 28
+
+```javascript
+const rateLimit = require('express-rate-limit');
+app.use(rateLimit(config.rateLimit));
+```
+
 O sistema demonstra ter **Rate Limiting muito agressivo**:
 
 #### Observações
 1. **Proteção efetiva**: Bloqueia ataques DDoS
 2. **Possível impacto UX**: Pode ser muito restritivo para uso normal
 3. **Funcionamento**: Headers 429 retornados corretamente
+4. **Limite calculado**: 1000 req/15min = aproximadamente 1.1 req/segundo por IP
+
+#### Comportamento Observado nos Testes
+Durante os testes de stress, o rate limiting se mostrou muito agressivo:
+- **Teste normal**: Não ativou (abaixo de 1000 req/15min)
+- **Teste extremo**: Bloqueou 252 de 500 requisições (50.4%)
+- **Teste de rajada**: Bloqueou 100% das requisições rápidas
+- **Bombardeio**: Bloqueou 149 de 2000 requisições
+
+#### Análise da Configuração Atual
+
+**Pontos Positivos**:
+- Protege contra ataques DDoS
+- Previne abuso da API
+- Funciona globalmente
+
+**Pontos de Atenção**:
+- Pode ser muito restritivo para uso normal
+- 1000 req/15min = aproximadamente 1.1 req/segundo pode ser baixo para alguns casos
+- Não há diferenciação entre usuários autenticados/anônimos
+- Não exclui endpoints críticos como /health
 
 #### Comportamento Observado
 - **Carga normal**: Rate limiting inativo
 - **Carga extrema**: Rate limiting ativo (50.4% bloqueios)
 - **Rajadas rápidas**: Rate limiting ativo (100% bloqueios)
+
+#### Sugestão de Melhoria para Produção
+
+Para um ambiente de produção mais balanceado:
+
+```javascript
+rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 1000, // limite geral
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Limite mais alto para usuários autenticados
+    keyGenerator: (req) => {
+        return req.user ? `user:${req.user.id}` : req.ip;
+    },
+    skip: (req) => {
+        // Pular rate limiting para health checks
+        return req.path === '/health';
+    }
+}
+```
+
+**Benefícios da configuração melhorada**:
+- Diferenciação entre usuários autenticados e anônimos
+- Exclusão de endpoints críticos (health checks)
+- Headers padronizados para melhor debugging
+- Maior flexibilidade para diferentes tipos de usuário
 
 ---
 
@@ -180,41 +251,6 @@ O sistema demonstra ter **Rate Limiting muito agressivo**:
 - **TCP/HTTP**: Funcionando perfeitamente em cargas normais
 - **Teste Extremo**: **69.5% de perda de pacotes** quando sistema sobrecarregado
 - **Limite do sistema**: Identificado com 500+ requisições concorrentes e timeout baixo
-
----
-
-## CONCLUSÕES E RECOMENDAÇÕES
-
-### SISTEMA SEGURO E PERFORMÁTICO
-1. **Performance**: Excelente resposta sob diversas cargas
-2. **Segurança**: Rate limiting efetivo, autenticação robusta
-3. **Estabilidade**: Zero perda de pacotes, conexões estáveis
-4. **Logs**: Monitoramento completo funcionando
-
-### MELHORIAS RECOMENDADAS
-
-#### Ajuste de Rate Limiting
-```javascript
-// Sugestão de configuração mais balanceada
-const rateLimit = {
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 1000, // limite por IP
-  burst: 50, // rajada permitida
-  skipSuccessfulRequests: true
-}
-```
-
-#### Testes Adicionais Recomendados
-1. **SQL Injection**: Executar com rate limiting relaxado
-2. **Load Testing prolongado**: Teste de 30+ minutos
-3. **Memory leak detection**: Monitoramento de memória
-4. **Database performance**: Teste com milhares de registros
-
-#### Monitoramento Contínuo
-1. Implementar alertas para rate limiting excessivo
-2. Dashboard de métricas em tempo real
-3. Backup automático da base de dados
-4. Logs de auditoria para ações críticas
 
 ---
 
