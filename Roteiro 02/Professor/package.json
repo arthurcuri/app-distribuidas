@@ -1,0 +1,16 @@
+{
+  "name": "roteiro02",
+  "version": "1.0.0",
+  "description": "Sistema de tarefas usando gRPC e Protocol Buffers",
+  "main": "src/server/server.js",
+  "scripts": {
+    "server": "node src/server/server.js",
+    "server:dev": "nodemon src/server/server.js",
+    "client": "node src/client/client.js",
+    "demo": "npm run client",
+    "proto:generate": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./generated --grpc_out=grpc_js:./generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto proto/*.proto"
+  },
+  "keywords": ["grpc", "protobuf", "sistemas-distribuidos", "rpc"],
+  "author": "Arthur Kramberger",
+  "license": "MIT"
+}
