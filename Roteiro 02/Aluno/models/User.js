@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const config = { jwtSecret: process.env.JWT_SECRET || 'seu-secret-aqui', jwtExpiration: '24h' };
+const config = { jwtSecret: process.env.JWT_SECRET || 'sua-chave-secreta-aqui', jwtExpiration: '24h' };
 
 class User {
     constructor(data) {

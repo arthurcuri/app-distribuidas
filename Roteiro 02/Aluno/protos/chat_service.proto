@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package chat;
+
+service ChatService {
+  // Streaming bidirecional para chat em tempo real
+  rpc StreamChat(stream ChatMessage) returns (stream ChatMessage);
+  
+  // Métodos auxiliares
+  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse);
+  rpc LeaveRoom(LeaveRoomRequest) returns (LeaveRoomResponse);
+  rpc GetChatHistory(GetChatHistoryRequest) returns (GetChatHistoryResponse);
+  rpc GetActiveUsers(GetActiveUsersRequest) returns (GetActiveUsersResponse);
+}
+
+enum MessageType {
+  TEXT = 0;
+  SYSTEM = 1;
+  USER_JOINED = 2;
+  USER_LEFT = 3;
+  TYPING = 4;
+  HEARTBEAT = 5;
+}
+
+message ChatMessage {
+  string id = 1;
+  string user_id = 2;
+  string username = 3;
+  string room_id = 4;
+  string content = 5;
+  MessageType type = 6;
+  int64 timestamp = 7;
+  string token = 8; // Para autenticação
+}
+
+message JoinRoomRequest {
+  string token = 1;
+  string room_id = 2;
+  string username = 3;
+}
+
+message JoinRoomResponse {
+  bool success = 1;
+  string message = 2;
+  string room_id = 3;
+  repeated string active_users = 4;
+}
+
+message LeaveRoomRequest {
+  string token = 1;
+  string room_id = 2;
+  string user_id = 3;
+}
+
+message LeaveRoomResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetChatHistoryRequest {
+  string token = 1;
+  string room_id = 2;
+  int32 limit = 3;
+  int64 before_timestamp = 4;
+}
+
+message GetChatHistoryResponse {
+  bool success = 1;
+  repeated ChatMessage messages = 2;
+  string message = 3;
+}
+
+message GetActiveUsersRequest {
+  string token = 1;
+  string room_id = 2;
+}
+
+message GetActiveUsersResponse {
+  bool success = 1;
+  repeated ActiveUser users = 2;
+  string message = 3;
+}
+
+message ActiveUser {
+  string user_id = 1;
+  string username = 2;
+  int64 last_seen = 3;
+  bool is_typing = 4;
+}

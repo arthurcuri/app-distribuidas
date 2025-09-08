@@ -136,7 +136,7 @@ class AuthService {
     async validateToken(call, callback) {
         try {
             const { token } = call.request;
-            const jwtSecret = process.env.JWT_SECRET || 'seu-secret-aqui';
+            const jwtSecret = process.env.JWT_SECRET || 'sua-chave-secreta-aqui';
 
             if (!token) {
                 return callback(null, {

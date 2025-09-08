@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Task = require('../models/Task');
 const database = require('../database/database');
 const ProtoLoader = require('../utils/protoLoader');
+const { ErrorFactory } = require('../utils/errorHandler');
 
 class TaskService {
     constructor() {
@@ -14,7 +15,7 @@ class TaskService {
      * Middleware para validação de token
      */
     async validateToken(token) {
-        const jwtSecret = process.env.JWT_SECRET || 'seu-secret-aqui';
+        const jwtSecret = process.env.JWT_SECRET || 'sua-chave-secreta-aqui';
         try {
             return jwt.verify(token, jwtSecret);
         } catch (error) {
@@ -27,16 +28,15 @@ class TaskService {
      */
     async createTask(call, callback) {
         try {
-            const { token, title, description, priority } = call.request;
+            const { title, description, priority } = call.request;
             
-            // Validar token
-            const user = await this.validateToken(token);
+            // Usuário já foi validado pelo middleware
+            const user = call.user;
             
             if (!title?.trim()) {
-                return callback(null, {
-                    success: false,
-                    message: 'Título é obrigatório',
-                    errors: ['Título não pode estar vazio']
+                throw ErrorFactory.validation('Título é obrigatório', {
+                    field: 'title',
+                    received: title
                 });
             }
 
@@ -53,10 +53,9 @@ class TaskService {
             const validation = task.validate();
 
             if (!validation.isValid) {
-                return callback(null, {
-                    success: false,
-                    message: 'Dados inválidos',
-                    errors: validation.errors
+                throw ErrorFactory.validation('Dados inválidos para a tarefa', {
+                    errors: validation.errors,
+                    taskData
                 });
             }
 
@@ -75,9 +74,12 @@ class TaskService {
             });
         } catch (error) {
             console.error('Erro ao criar tarefa:', error);
-            const grpcError = new Error(error.message || 'Erro interno do servidor');
-            grpcError.code = error.message === 'Token inválido' ? grpc.status.UNAUTHENTICATED : grpc.status.INTERNAL;
-            callback(grpcError);
+            // Se for um erro estruturado, re-lançar para o interceptador tratar
+            if (error.type) {
+                throw error;
+            }
+            // Senão, criar um erro de banco de dados
+            throw ErrorFactory.database(error, 'CREATE_TASK');
         }
     }
 
@@ -86,8 +88,8 @@ class TaskService {
      */
     async getTasks(call, callback) {
         try {
-            const { token, completed, priority, page, limit } = call.request;
-            const user = await this.validateToken(token);
+            const { completed, priority, page, limit } = call.request;
+            const user = call.user;
 
             let sql = 'SELECT * FROM tasks WHERE userId = ?';
             const params = [user.id];
@@ -134,8 +136,15 @@ class TaskService {
      */
     async getTask(call, callback) {
         try {
-            const { token, task_id } = call.request;
-            const user = await this.validateToken(token);
+            const { task_id } = call.request;
+            const user = call.user;
+
+            if (!task_id) {
+                throw ErrorFactory.validation('ID da tarefa é obrigatório', {
+                    field: 'task_id',
+                    received: task_id
+                });
+            }
 
             const row = await database.get(
                 'SELECT * FROM tasks WHERE id = ? AND userId = ?',
@@ -143,10 +152,7 @@ class TaskService {
             );
 
             if (!row) {
-                return callback(null, {
-                    success: false,
-                    message: 'Tarefa não encontrada'
-                });
+                throw ErrorFactory.notFound('Tarefa', task_id);
             }
 
             const task = new Task({...row, completed: row.completed === 1});
@@ -158,9 +164,12 @@ class TaskService {
             });
         } catch (error) {
             console.error('Erro ao buscar tarefa:', error);
-            const grpcError = new Error(error.message || 'Erro interno do servidor');
-            grpcError.code = error.message === 'Token inválido' ? grpc.status.UNAUTHENTICATED : grpc.status.INTERNAL;
-            callback(grpcError);
+            // Se for um erro estruturado, re-lançar para o interceptador tratar
+            if (error.type) {
+                throw error;
+            }
+            // Senão, criar um erro de banco de dados
+            throw ErrorFactory.database(error, 'GET_TASK');
         }
     }
 
@@ -169,8 +178,8 @@ class TaskService {
      */
     async updateTask(call, callback) {
         try {
-            const { token, task_id, title, description, completed, priority } = call.request;
-            const user = await this.validateToken(token);
+            const { task_id, title, description, completed, priority } = call.request;
+            const user = call.user;
 
             // Verificar se a tarefa existe
             const existingTask = await database.get(
@@ -234,8 +243,8 @@ class TaskService {
      */
     async deleteTask(call, callback) {
         try {
-            const { token, task_id } = call.request;
-            const user = await this.validateToken(token);
+            const { task_id } = call.request;
+            const user = call.user;
 
             // Buscar tarefa antes de deletar (para notificações)
             const existingTask = await database.get(
@@ -284,8 +293,7 @@ class TaskService {
      */
     async getTaskStats(call, callback) {
         try {
-            const { token } = call.request;
-            const user = await this.validateToken(token);
+            const user = call.user;
 
             const stats = await database.get(`
                 SELECT 
@@ -322,8 +330,8 @@ class TaskService {
      */
     async streamTasks(call) {
         try {
-            const { token, completed } = call.request;
-            const user = await this.validateToken(token);
+            const { completed } = call.request;
+            const user = call.user;
 
             let sql = 'SELECT * FROM tasks WHERE userId = ?';
             const params = [user.id];
@@ -372,8 +380,7 @@ class TaskService {
      */
     async streamNotifications(call) {
         try {
-            const { token } = call.request;
-            const user = await this.validateToken(token);
+            const user = call.user;
 
             const sessionId = uuidv4();
             
