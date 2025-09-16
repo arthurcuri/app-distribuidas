@@ -1,0 +1,57 @@
+{
+  "name": "tarefa-roteiro-03",
+  "version": "1.0.0",
+  "description": "Sistema de Microsserviços - PUC Minas",
+  "main": "client-demo.js",
+  "scripts": {
+    "start": "concurrently \"npm run start:user\" \"npm run start:product\" \"npm run start:gateway\" \"npm run start:list\"",
+    "start:user": "cd services/user-service && npm start",
+    "start:product": "cd services/product-service && npm start",
+    "start:gateway": "cd api-gateway && npm start",
+    "start:list": "cd services/list-service && npm start",
+    "dev": "concurrently \"npm run dev:user\" \"npm run dev:product\" \"npm run dev:gateway\" \"npm run dev:list\"",
+    "dev:user": "cd services/user-service && npm run dev",
+    "dev:product": "cd services/product-service && npm run dev",
+    "dev:gateway": "cd api-gateway && npm run dev",
+    "demo": "node client-demo.js",
+    "health": "curl -s http://localhost:3000/health",
+    "install:all": "npm install && cd services/user-service && npm install && cd ../product-service && npm install && cd ../../api-gateway && npm install && cd ../services/list-service && npm install",
+    "clean": "rm -rf node_modules services/*/node_modules api-gateway/node_modules",
+    "load:all": "node scripts/load-all-data.js",
+    "load:users": "node scripts/load-user-data.js",
+    "load:items": "node scripts/load-item-data.js",
+    "load:lists": "node scripts/load-list-data.js",
+    "load:gateway": "node scripts/load-gateway-data.js",
+    "clear:all": "node scripts/clear-all-data.js",
+    "setup": "npm run install:all && npm run load:all",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "microservices",
+    "nosql",
+    "api-gateway",
+    "service-discovery",
+    "circuit-breaker",
+    "sistemas-distribuidos",
+    "puc-minas"
+  ],
+  "author": "Arthur Kramberger",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arthurcuri"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bcrypt": "^5.1.0",
+    "fs-extra": "^11.1.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "953af2e2-0ac4-4f43-b81a-d3c343588f8c",
+    "userId": "user-demo-1",
+    "name": "Lista de Compras da Semana",
+    "description": "Lista básica para compras semanais",
+    "status": "active",
+    "items": [
+      {
+        "itemId": "item-1",
+        "itemName": "Arroz Branco",
+        "quantity": 2,
+        "unit": "kg",
+        "estimatedPrice": 9,
+        "purchased": false,
+        "notes": "Marca Tio João preferencial",
+        "addedAt": "2025-09-16T02:15:19.138Z"
+      },
+      {
+        "itemId": "item-2",
+        "itemName": "Feijão Preto",
+        "quantity": 1,
+        "unit": "kg",
+        "estimatedPrice": 6.2,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-09-16T02:15:19.138Z"
+      }
+    ],
+    "summary": {
+      "totalItems": 2,
+      "purchasedItems": 0,
+      "estimatedTotal": 15.2
+    },
+    "createdAt": "2025-09-16T02:15:19.138Z",
+    "updatedAt": "2025-09-16T02:15:19.138Z"
+  }
+]
